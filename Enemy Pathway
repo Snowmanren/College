@@ -1,0 +1,41 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class EnemyPathway : MonoBehaviour
+{
+    public Vector3[] waypoints; // List of target positions
+    public float speed = 1.0f;  // Movement speed
+    private int currentWaypointIndex = 0; // Current target waypoint
+
+    private void Update()
+    {
+        if (waypoints.Length == 0) return; // Exit if no waypoints are set
+
+        // Get the current target waypoint
+        Vector3 targetPosition = waypoints[currentWaypointIndex];
+
+        // Move the enemy towards the target
+        Vector3 direction = targetPosition - transform.position;
+        float distance = direction.magnitude;
+
+        if (distance > 0.1f) // If not close enough to the target
+        {
+            // Normalize the direction and move
+            direction.Normalize();
+            transform.position += direction * speed * Time.deltaTime;
+        }
+        else
+        {
+            // Snap to the target position and move to the next waypoint
+            transform.position = targetPosition;
+            currentWaypointIndex++;
+
+            // Loop back to the first waypoint if all waypoints are reached
+            if (currentWaypointIndex >= waypoints.Length)
+            {
+                currentWaypointIndex = 0; // Optional: Remove this line if you want to stop at the last waypoint
+            }
+        }
+    }
+}
