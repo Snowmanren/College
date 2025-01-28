@@ -1,16 +1,17 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
+using System.Collections;
 
-public class EnemyPathway : MonoBehaviour
+public class EnemyPathwayWithWait : MonoBehaviour
 {
     public Vector3[] waypoints; // List of target positions
     public float speed = 1.0f;  // Movement speed
+    public float waitTime = 2.0f; // Time to wait at each waypoint
     private int currentWaypointIndex = 0; // Current target waypoint
+    private bool isWaiting = false; // Tracks if the enemy is waiting
 
     private void Update()
     {
-        if (waypoints.Length == 0) return; // Exit if no waypoints are set
+        if (waypoints.Length == 0 || isWaiting) return; // Exit if no waypoints are set or enemy is waiting
 
         // Get the current target waypoint
         Vector3 targetPosition = waypoints[currentWaypointIndex];
@@ -27,15 +28,24 @@ public class EnemyPathway : MonoBehaviour
         }
         else
         {
-            // Snap to the target position and move to the next waypoint
+            // Snap to the target position and start waiting
             transform.position = targetPosition;
-            currentWaypointIndex++;
-
-            // Loop back to the first waypoint if all waypoints are reached
-            if (currentWaypointIndex >= waypoints.Length)
-            {
-                currentWaypointIndex = 0; // Optional: Remove this line if you want to stop at the last waypoint
-            }
+            StartCoroutine(WaitAtWaypoint());
         }
+    }
+
+    private IEnumerator WaitAtWaypoint()
+    {
+        isWaiting = true; // Prevent further movement during wait
+        yield return new WaitForSeconds(waitTime); // Wait for the specified duration
+
+        // Move to the next waypoint
+        currentWaypointIndex++;
+        if (currentWaypointIndex >= waypoints.Length)
+        {
+            currentWaypointIndex = 0; // Optional: Loop back to the first waypoint
+        }
+
+        isWaiting = false; // Resume movement
     }
 }
