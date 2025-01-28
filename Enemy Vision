@@ -1,0 +1,51 @@
+using UnityEngine;
+using System.Collections;
+
+public class EnemyPathwayWithWait : MonoBehaviour
+{
+    public Vector3[] waypoints; // List of target positions
+    public float speed = 1.0f;  // Movement speed
+    public float waitTime = 2.0f; // Time to wait at each waypoint
+    private int currentWaypointIndex = 0; // Current target waypoint
+    private bool isWaiting = false; // Tracks if the enemy is waiting
+
+    private void Update()
+    {
+        if (waypoints.Length == 0 || isWaiting) return; // Exit if no waypoints are set or enemy is waiting
+
+        // Get the current target waypoint
+        Vector3 targetPosition = waypoints[currentWaypointIndex];
+
+        // Move the enemy towards the target
+        Vector3 direction = targetPosition - transform.position;
+        float distance = direction.magnitude;
+
+        if (distance > 0.1f) // If not close enough to the target
+        {
+            // Normalize the direction and move
+            direction.Normalize();
+            transform.position += direction * speed * Time.deltaTime;
+        }
+        else
+        {
+            // Snap to the target position and start waiting
+            transform.position = targetPosition;
+            StartCoroutine(WaitAtWaypoint());
+        }
+    }
+
+    private IEnumerator WaitAtWaypoint()
+    {
+        isWaiting = true; // Prevent further movement during wait
+        yield return new WaitForSeconds(waitTime); // Wait for the specified duration
+
+        // Move to the next waypoint
+        currentWaypointIndex++;
+        if (currentWaypointIndex >= waypoints.Length)
+        {
+            currentWaypointIndex = 0; // Optional: Loop back to the first waypoint
+        }
+
+        isWaiting = false; // Resume movement
+    }
+}
