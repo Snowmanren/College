@@ -28,14 +28,9 @@ public class PlayerMovement : MonoBehaviour
 
         transform.position += new Vector3(movement, 0, 0) * Time.deltaTime * MovementSpeed;
 
+        var movement2 = Input.GetAxis("Vertical");
 
-        if (Input.GetButtonDown("Jump") && Mathf.Abs(_rigidbody.linearVelocity.y) < 0.001f)
-
-        {
-
-            _rigidbody.AddForce(new Vector2(0, JumpForce), ForceMode2D.Impulse);
-
-        }
+        transform.position += new Vector3(0, movement2, 0) * Time.deltaTime * MovementSpeed;
 
     }
 }
