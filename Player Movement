@@ -7,9 +7,6 @@ public class PlayerMovement : MonoBehaviour
 
     public float MovementSpeed = 1;
 
-    public float JumpForce = 1;
-
-
     private Rigidbody2D _rigidbody;
 
     void Start()
@@ -31,6 +28,26 @@ public class PlayerMovement : MonoBehaviour
         var movement2 = Input.GetAxis("Vertical");
 
         transform.position += new Vector3(0, movement2, 0) * Time.deltaTime * MovementSpeed;
+
+        if (Input.GetKeyDown(KeyCode.LeftShift))
+        {
+            MovementSpeed = MovementSpeed / 2f;
+        }
+        
+        if (Input.GetKeyUp(KeyCode.LeftShift))
+        {
+            MovementSpeed = MovementSpeed * 2f;
+        }
+        
+        if (Input.GetKeyDown(KeyCode.LeftControl))
+        {
+            MovementSpeed = MovementSpeed * 2f;
+        }
+        
+        if (Input.GetKeyUp(KeyCode.LeftControl))
+        {
+            MovementSpeed = MovementSpeed / 2f;
+        }
 
     }
 }
