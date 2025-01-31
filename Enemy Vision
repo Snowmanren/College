@@ -1,66 +1,62 @@
-ng UnityEngine;
-using System.Collections;
+using UnityEngine;
 
-public class EnemyPathway2D : MonoBehaviour
+public class VisionCone2D : MonoBehaviour
 {
-    public Vector2[] waypoints;  // List of target positions (use Vector2 for 2D)
-    public float speed = 1.0f;    // Movement speed
-    public float waitTime = 2.0f; // Time to wait at each waypoint
-    public float rotationSpeed = 5.0f; // Speed of rotation (how fast it turns to face the direction)
+    [Header("Enemy Vision Settings")]
+    public Transform player; // The player's transform
+    public float fieldOfViewAngle = 90f; // Field of view angle in degrees
+    public float visionRange = 10f; // Maximum range of the vision cone
 
-    private int currentWaypointIndex = 0; // Current target waypoint
-    private bool isWaiting = false;       // Tracks if the enemy is waiting
-
-    private void Update()
+    void Update()
     {
-        if (waypoints.Length == 0 || isWaiting) return; // Exit if no waypoints are set or enemy is waiting
-
-        // Get the current target waypoint
-        Vector2 targetPosition = waypoints[currentWaypointIndex];
-
-        // Move the enemy towards the target
-        Vector2 direction = targetPosition - (Vector2)transform.position;
-        float distance = direction.magnitude;
-
-        if (distance > 0.1f) // If not close enough to the target
+        if (IsPlayerInVisionCone())
         {
-            // Normalize the direction
-            direction.Normalize();
-
-            // Rotate towards the direction of movement
-            if (direction != Vector2.zero)
-            {
-                float targetAngle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg + -90;
-                float currentAngle = transform.rotation.eulerAngles.z;
-
-                // Smooth rotation to face the direction
-                float angle = Mathf.LerpAngle(currentAngle, targetAngle, rotationSpeed * Time.deltaTime);
-                transform.rotation = Quaternion.Euler(0f, 0f, angle);
-            }
-
-            // Move the enemy forward
-            transform.position = Vector2.MoveTowards(transform.position, targetPosition, speed * Time.deltaTime);
+            Debug.Log("Player is in vision cone!");
+            // Trigger your event here (e.g., alert the enemy)
         }
         else
         {
-            // Snap to the target position and start waiting
-            transform.position = targetPosition;
-            StartCoroutine(WaitAtWaypoint());
+            Debug.Log("Player is NOT in vision cone.");
         }
     }
 
-    private IEnumerator WaitAtWaypoint()
+    private bool IsPlayerInVisionCone()
     {
-        isWaiting = true; // Prevent further movement during wait
-        yield return new WaitForSeconds(waitTime); // Wait for the specified duration
+        // Calculate the vector from the enemy to the player (2D, only X and Y)
+        Vector2 directionToPlayer = (player.position - transform.position);
 
-        // Move to the next waypoint
-        currentWaypointIndex++;
-        if (currentWaypointIndex >= waypoints.Length)
-        {
-            currentWaypointIndex = 0; // Optional: Loop back to the first waypoint
-        }
+        // Check if the player is within vision range (ignores Z-axis)
+        if (directionToPlayer.magnitude > visionRange)
+            return false;
 
-        isWaiting = false; // Resume movement
+        // Normalize the direction vector (ignore Z-axis)
+        directionToPlayer.Normalize();
+
+        // Get the enemy's forward direction in 2D based on rotation
+        Vector2 enemyForward = transform.up; // Use transform.up to get forward direction considering rotation
+
+        // Calculate the dot product between the enemy's forward direction and the direction to the player
+        float dotProduct = Vector2.Dot(enemyForward, directionToPlayer);
+
+        // Calculate the angle between the two vectors (in degrees)
+        float angle = Mathf.Acos(dotProduct) * Mathf.Rad2Deg;
+
+        // Check if the angle is within half the field of view
+        return angle <= fieldOfViewAngle / 2;
+    }
+
+    private void OnDrawGizmos()
+    {
+        // Draw the vision cone in the Scene view for debugging
+        Gizmos.color = new Color(1, 0, 0, 0.3f);
+
+        // Create vectors for the left and right boundaries of the vision cone
+        Vector2 leftBoundary = Quaternion.Euler(0, 0, -fieldOfViewAngle / 2) * transform.up;
+        Vector2 rightBoundary = Quaternion.Euler(0, 0, fieldOfViewAngle / 2) * transform.up;
+
+        // Draw lines representing the vision cone boundaries
+        Gizmos.DrawLine(transform.position, transform.position + (Vector3)leftBoundary * visionRange);
+        Gizmos.DrawLine(transform.position, transform.position + (Vector3)rightBoundary * visionRange);
+        Gizmos.DrawWireSphere(transform.position, visionRange);
     }
 }
